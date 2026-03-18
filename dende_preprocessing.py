@@ -15,55 +15,74 @@ class MissingValueProcessor:
     def isna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
         """
         Retorna um novo dataset contendo apenas as linhas que possuem
-        pelo menos um valor nulo (None) em uma das colunas especificadas.
+        pelo menos um valor nulo (None, vazio ou N/A) em uma das colunas especificadas.
 
-        Args:
-            columns (Set[str]): Um conjunto de nomes de colunas a serem verificadas.
-                            Se vazio, todas as colunas são consideradas.
-
-        Returns:
-            Dict[str, List[Any]]: Um dicionário representando as linhas com valores nulos.
         """
-        pass
+        # Garante que o dataset recebido tem dados e mira nos espaços vazios
+        alvos = self._get_target_columns(columns)
+        if not alvos:
+            return {}
+
+        num_linhas = len(self.dataset[alvos[0]])
+        novo_dataset = {col: [] for col in self.dataset.keys()}
+
+
+        for i in range(num_linhas):
+            # Verifica se existe algum valor nulo na linha atual para as colunas alvo
+            tem_nulo = any(self.dataset[col][i] in [None, "", "N/A"] for col in alvos)
+            if tem_nulo:
+                for col in self.dataset.keys():
+                    novo_dataset[col].append(self.dataset[col][i])
+
+        return novo_dataset
+
 
     def notna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
         """
         Retorna um novo dataset contendo apenas as linhas que não possuem
         valores nulos (None) em nenhuma das colunas especificadas.
-
-        Args:
-            columns (Set[str]): Um conjunto de nomes de colunas a serem verificadas.
-                               Se vazio, todas as colunas são consideradas.
-
-        Returns:
-            Dict[str, List[Any]]: Um dicionário representando as linhas sem valores nulos.
         """
-        pass
+        alvos = self._get_target_columns(columns)
+        if not alvos:
+            return {}
+
+        num_linhas = len(self.dataset[alvos[0]])
+        novo_dataset = {col: [] for col in self.dataset.keys()}
+
+        for i in range(num_linhas):
+
+            tem_nulo = any(self.dataset[col][i] in [None, "", "N/A"] for col in alvos)
+            if not tem_nulo:
+                for col in self.dataset.keys():
+                    novo_dataset[col].append(self.dataset[col][i])
+
+        return novo_dataset
+
 
     def fillna(self, columns: Set[str] = None, value: Any = 0) -> Dict[str, List[Any]]:
         """
-        Preenche valores nulos (None) nas colunas especificadas com um valor fixo.
+        Preenche valores nulos (None) nas colunas especificadas com um valor fixo (Any = 0).
         Modifica o dataset da classe.
-
-        Args:
-            columns (Set[str]): Colunas onde o preenchimento será aplicado. 
-                               Se vazio, aplica a todas as colunas do dataset.
-            value (Any): Valor a ser inserido no lugar de None.
-
-        Returns:
-            Preprocessing: A própria instância (self) para permitir encadeamento.
         """
-        pass
+        alvos = self._get_target_columns(columns)
+
+        for col in alvos:
+            dados = self.dataset[col]
+            for i in range(len(dados)):
+                if dados[i] in [None, "", "N/A"]:
+                    dados[i] = value
+
+        return self.dataset
+
 
     def dropna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
         """
         Remove as linhas que contêm valores nulos (None) nas colunas especificadas.
         Modifica o dataset da classe.
-
-        Args:
-            columns (Set[str]): Colunas a serem verificadas para valores nulos. Se vazio, todas as colunas são verificadas.
         """
-        pass
+        # Substitui o dataset original apenas pelas linhas sem nulos (filtrado no notna)
+        self.dataset = self.notna(columns)
+        return self.dataset
 
 
 class Scaler:
