@@ -83,7 +83,7 @@ class TestPreprocessingWith10x5Dataset(unittest.TestCase):
 
     def test_standard_scaler(self):
         prep = Preprocessing(copy.deepcopy(self.dataset))
-        prep.fillna(value=0)
+        prep.fillna(columns={"age"}, value=0)
 
         result = prep.scale(columns={"age"}, method="standard")
 

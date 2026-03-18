@@ -99,11 +99,28 @@ class Scaler:
         """
         Aplica a normalização Min-Max ($X_{norm} = \frac{X - X_{min}}{X_{max} - X_{min}}$)
         nas colunas especificadas. Modifica o dataset.
-
-        Args:
-            columns (Set[str]): Colunas para aplicar o scaler. Se vazio, tenta aplicar a todas.
         """
-        pass
+        alvos = self._get_target_columns(columns)
+
+        for col in alvos:
+            dados = self.dataset[col]
+            val_min = min(dados)
+            val_max = max(dados)
+            amplitude = val_max - val_min
+
+            if amplitude == 0:
+                self.dataset[col] = [0.0 for _ in dados]
+                continue  # Pula para a próxima coluna
+
+            dados_escalados = []
+            for x in dados:
+                x_normalizado = (x - val_min) / amplitude
+                dados_escalados.append(x_normalizado)
+
+            self.dataset[col] = dados_escalados
+
+        return self.dataset
+
 
     def standard_scaler(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
         """
@@ -113,7 +130,27 @@ class Scaler:
         Args:
             columns (Set[str]): Colunas para aplicar o scaler. Se vazio, tenta aplicar a todas.
         """
-        pass
+        alvos = self._get_target_columns(columns)
+        stats = Statistics(self.dataset)  # Instancia (usa a statistics) aqui para calcular média e desvio
+
+        for col in alvos:
+            dados = self.dataset[col]
+            media = stats.mean(col)
+            desvio = stats.stdev(col)
+
+            if desvio == 0:
+                self.dataset[col] = [0.0 for _ in dados]
+                continue
+
+            dados_padronizados = []
+            for x in dados:
+                zScore = (x - media) / desvio
+                dados_padronizados.append(zScore)
+
+            self.dataset[col] = dados_padronizados
+
+        return self.dataset
+
 
 class Encoder:
     """
