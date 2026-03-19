@@ -140,7 +140,8 @@ class TestPreprocessingWith10x5Dataset(unittest.TestCase):
 
     def test_dataset_integrity_after_operations(self):
         prep = Preprocessing(copy.deepcopy(self.dataset))
-        prep.fillna(value=0)
+        prep.fillna(columns={"age", "salary", "score"}, value=0)
+        prep.fillna(columns={"city", "department"}, value="Desconhecido")
         prep.scale(columns={"age", "salary"}, method="minMax")
         prep.encode(columns={"city"}, method="label")
 

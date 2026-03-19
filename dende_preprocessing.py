@@ -163,21 +163,52 @@ class Encoder:
         """
         Converte cada categoria em uma coluna em um número inteiro.
         Modifica o dataset.
-
-        Args:
-            columns (Set[str]): Colunas categóricas para codificar.
         """
-        pass
+        for col in columns:
+            dados = self.dataset[col]
+            categoriasUnicas = list(set(dados))
+            categoriasUnicas.sort()
+
+            mapaCategorias = {}
+            for i, categoria in enumerate(categoriasUnicas):
+                mapaCategorias[categoria] = i
+
+            dadosCodificados = []
+            for valor in dados:
+                dadosCodificados.append(mapaCategorias[valor])
+
+            self.dataset[col] = dadosCodificados
+
+        return self.dataset
+
 
     def oneHot_encode(self, columns: Set[str]) -> Dict[str, List[Any]]:
         """
         Cria novas colunas binárias para cada categoria nas colunas especificadas (One-Hot Encoding).
         Modifica o dataset adicionando e removendo colunas.
-
-        Args:
-            columns (Set[str]): Colunas categóricas para codificar.
         """
-        pass
+        # Converte para lista para evitar erro ao apagar colunas durante o loop
+        for col in list(columns):
+            dados = self.dataset[col]
+            categoriasUnicas = list(set(dados))
+            categoriasUnicas.sort()
+
+            num_linhas = len(dados)
+
+            # Cria as novas colunas preenchidas com zeros
+            for categoria in categoriasUnicas:
+                novaColuna = f"{col}_{categoria}"
+                self.dataset[novaColuna] = [0 for _ in range(num_linhas)]
+
+            # Coloca os '1' nas devidas colunas
+            for i, valor in enumerate(dados):
+                colunaAlvo = f"{col}_{valor}"
+                self.dataset[colunaAlvo][i] = 1
+
+            # Apaga a coluna original de texto
+            del self.dataset[col]
+
+        return self.dataset
 
 
 class Preprocessing:
@@ -200,13 +231,21 @@ class Preprocessing:
         Valida se todas as listas (colunas) no dicionário do dataset
         têm o mesmo comprimento.
         """
-        pass
+        if not self.dataset:
+            return
+
+        tamanhos = [len(coluna) for coluna in self.dataset.values()]
+        # Transforma a lista de tamanhos num 'set', aí só pode restar 1 valor
+        # Se restar mais de 1, significa que temos colunas de tamanhos diferentes
+        if len(set(tamanhos)) > 1:
+            raise ValueError("Erro: As colunas do dataset possuem tamanhos diferentes (linhas faltando).")
 
     def isna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
         """
         Atalho para missing_values.isna(). 
         Retorna um dicionário contendo apenas as linhas com valores nulos.
         """
+
         return self.missing_values.isna(columns)
 
     def notna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
