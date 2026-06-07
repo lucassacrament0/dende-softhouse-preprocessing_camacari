@@ -311,9 +311,11 @@ class Preprocessing:
     """
     def __init__(self, dataset: Dict[str, List[Any]]):
         self.dataset = dataset
+        # vocês poderiam ter reaproveitado o fato da statistics já fazer essa validação, evitando a necessidade 
+        # de codificar essa validação novamente aqui, melhorando a eficiência do código e evitando a repetição de código.
         self._validate_dataset_shape()
         
-        self.statistics = Statistics(self.dataset)
+        self.statistics = Statistics(self.dataset) # não é usado, mas deveria ser
         self.missing_values = MissingValueProcessor(self.dataset)
         self.scaler = Scaler(self.dataset)
         self.encoder = Encoder(self.dataset)
